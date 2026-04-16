@@ -4,7 +4,10 @@
       "Bash(wc -l /home/younes/ecole-gestion/README.md /home/younes/ecole-gestion/docs/*.md)",
       "Bash(npx create-next-app@latest *)",
       "Bash(mv /home/younes/ecole-gestion/README.md.bak /tmp/README.md.bak)",
-      "Bash(mv /home/younes/ecole-gestion/docs /tmp/docs.bak)"
+      "Bash(mv /home/younes/ecole-gestion/docs /tmp/docs.bak)",
+      "Bash(cp /tmp/README.md.bak /home/younes/ecole-gestion/README.md)",
+      "Bash(cp -r /tmp/docs.bak /home/younes/ecole-gestion/docs)",
+      "Bash(npx shadcn@latest *)"
     ]
   }
 }
