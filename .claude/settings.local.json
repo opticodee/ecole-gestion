@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /home/younes/ecole-gestion/README.md /home/younes/ecole-gestion/docs/*.md)",
+      "Bash(npx create-next-app@latest *)",
+      "Bash(mv /home/younes/ecole-gestion/README.md.bak /tmp/README.md.bak)",
+      "Bash(mv /home/younes/ecole-gestion/docs /tmp/docs.bak)"
+    ]
+  }
+}
