@@ -10,10 +10,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import type { TimeSlot } from '@prisma/client';
+import type { TimeSlotValue as TimeSlot } from '@/lib/constants.client';
 import type { TimetableClassCell } from '@/server/actions/timetable';
 import { TimetableClassCard, type CardSize } from './timetable-class-card';
-import { TIME_SLOT_LABELS } from '@/lib/constants';
+import { TIME_SLOT_LABELS } from '@/lib/constants.client';
 
 export type CellVariant =
   | 'DISABLED'

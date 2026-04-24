@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { TimeSlot } from '@prisma/client';
+import type { TimeSlotValue as TimeSlot } from '@/lib/constants.client';
 import type {
   TimetableClassCell,
   TimetableData,

@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 import { EmptyState } from '@/components/shared/empty-state';
 import type { AttendanceStats } from '@/server/actions/attendance';
-import { ABSENCE_ALERT_THRESHOLD } from '@/lib/constants';
+import { ABSENCE_ALERT_THRESHOLD } from '@/lib/constants.client';
 import { cn } from '@/lib/utils';
 
 interface AttendanceStatsProps {

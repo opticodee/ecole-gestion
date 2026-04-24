@@ -28,7 +28,7 @@ import {
 } from '@/lib/formatters';
 import { TIME_SLOT_LABELS } from '@/lib/time-slots';
 import { cn } from '@/lib/utils';
-import { ABSENCE_ALERT_THRESHOLD } from '@/lib/constants';
+import { ABSENCE_ALERT_THRESHOLD } from '@/lib/constants.client';
 
 interface ClassOption {
   id: string;

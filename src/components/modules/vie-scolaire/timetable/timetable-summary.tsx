@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TIME_SLOTS, TIME_SLOT_LABELS } from '@/lib/constants';
+import { TIME_SLOTS, TIME_SLOT_LABELS } from '@/lib/constants.client';
 import type {
   TimetableClassCell,
   TimetableData,

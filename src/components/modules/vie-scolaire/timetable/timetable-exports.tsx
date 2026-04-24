@@ -2,7 +2,7 @@
 
 import { FileDown, FileText, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TIME_SLOTS, TIME_SLOT_LABELS } from '@/lib/constants';
+import { TIME_SLOTS, TIME_SLOT_LABELS } from '@/lib/constants.client';
 import { formatDateFR } from '@/lib/formatters';
 import type {
   TimetableClassCell,
