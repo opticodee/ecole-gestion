@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import type { ComponentType, SVGProps } from 'react';
+import { GraduationCap, Shield, Users } from 'lucide-react';
 import { LoginForm } from './login-form';
 
 export const metadata: Metadata = {
@@ -64,9 +66,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold tracking-tight xl:text-4xl">
               ACMSCHOOL
             </h1>
-            <p
-              className="mt-0.5 text-sm font-medium tracking-wide text-white/70"
-            >
+            <p className="mt-0.5 text-sm font-medium tracking-wide text-white/70">
               École d&apos;enseignement arabe et coranique
             </p>
           </div>
@@ -75,31 +75,31 @@ export default function LoginPage() {
         {/* CENTER — big typography */}
         <div className="relative z-10 flex flex-1 flex-col justify-center">
           <h2 className="text-5xl font-bold leading-tight tracking-tight xl:text-6xl">
-            Gérez votre école
+            Bienvenue sur
             <br />
-            <span style={{ color: GOLD }}>en toute simplicité.</span>
+            <span style={{ color: GOLD }}>votre espace scolaire.</span>
           </h2>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-white/60">
-            Suivi pédagogique, gestion des classes et communication simplifiée.
+            Suivez la scolarité, consultez les résultats et restez connectés.
           </p>
         </div>
 
         {/* BOTTOM — feature cards */}
         <div className="relative z-10 grid grid-cols-3 gap-3">
           <FeatureCard
-            emoji="📚"
+            icon={GraduationCap}
             title="Vie Scolaire"
-            subtitle="Gestion complète des élèves et classes"
+            subtitle="Notes, bulletins et suivi des élèves"
           />
           <FeatureCard
-            emoji="📊"
-            title="Évaluations"
-            subtitle="Notes, bulletins et suivi pédagogique"
+            icon={Users}
+            title="Espace dédié"
+            subtitle="Parents, enseignants et administration"
           />
           <FeatureCard
-            emoji="🔒"
+            icon={Shield}
             title="Sécurisé"
-            subtitle="Données protégées et accès contrôlé"
+            subtitle="Vos données protégées et confidentielles"
           />
         </div>
 
@@ -134,7 +134,7 @@ export default function LoginPage() {
           <div className="space-y-1.5">
             <h2 className="text-2xl font-semibold tracking-tight">Connexion</h2>
             <p className="text-sm text-muted-foreground">
-              Entrez vos identifiants pour accéder à votre espace.
+              Connectez-vous avec votre adresse email.
             </p>
           </div>
 
@@ -150,11 +150,11 @@ export default function LoginPage() {
 }
 
 function FeatureCard({
-  emoji,
+  icon: Icon,
   title,
   subtitle,
 }: {
-  emoji: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   title: string;
   subtitle: string;
 }) {
@@ -163,10 +163,13 @@ function FeatureCard({
       className="rounded-xl border bg-white/10 p-4 backdrop-blur-sm"
       style={{ borderColor: `${GOLD}4D` }}
     >
-      <div className="text-xl" aria-hidden>
-        {emoji}
-      </div>
-      <p className="mt-2 text-sm font-semibold text-white">{title}</p>
+      <span
+        className="flex h-10 w-10 items-center justify-center rounded-lg"
+        style={{ backgroundColor: `${GOLD}1F`, color: GOLD }}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <p className="mt-3 text-sm font-semibold text-white">{title}</p>
       <p className="mt-0.5 text-xs leading-snug text-white/70">{subtitle}</p>
     </div>
   );
