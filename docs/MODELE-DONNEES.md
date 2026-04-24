@@ -101,11 +101,13 @@ School (tenant)
 | createdAt | DateTime | auto | |
 | updatedAt | DateTime | auto | |
 
-**Relations** : Un Teacher enseigne plusieurs Subject (table de liaison `TeacherSubject`).
+**Relations** : Un Teacher est le professeur attitré de une ou plusieurs ClassGroup (via `ClassGroup.mainTeacherId`). Un professeur enseigne TOUTES les matières à ses classes pour toute l'année scolaire.
+
+**Règle : 1 classe = 1 prof attitré pour l'année.** Pas de rotation de professeurs par matière. Le prof assigne à une classe s'occupe de tout l'enseignement.
 
 ---
 
-### TeacherSubject (Liaison Professeur-Matière)
+### TeacherSubject (Liaison Professeur-Matière) — *table conservée mais non utilisée activement*
 
 | Champ | Type | Contrainte | Description |
 |---|---|---|---|
@@ -114,6 +116,8 @@ School (tenant)
 | subjectId | UUID | FK → Subject | |
 
 **Index unique** : `(teacherId, subjectId)`.
+
+**Note** : cette table est un vestige du modèle initial où chaque prof était spécialisé par matière. Dans le modèle actuel, le prof attitré enseigne toutes les matières à sa classe. Cette table pourra être supprimée dans un cleanup futur.
 
 ---
 
@@ -255,8 +259,6 @@ Matières totalement libres, adaptées à l'enseignement arabe/coranique.
 | schoolId | UUID | FK → School | |
 | academicYearId | UUID | FK → AcademicYear | |
 | classGroupId | UUID | FK → ClassGroup | |
-| subjectId | UUID | FK → Subject | |
-| teacherId | UUID | FK → Teacher | |
 | timeSlot | Enum | NOT NULL | MERCREDI_PM, SAMEDI_AM, SAMEDI_PM, DIMANCHE_AM, DIMANCHE_PM |
 | startTime | String | NOT NULL | Format "HH:MM" |
 | endTime | String | NOT NULL | Format "HH:MM" |
@@ -265,7 +267,9 @@ Matières totalement libres, adaptées à l'enseignement arabe/coranique.
 
 **Index unique** : `(classGroupId, timeSlot, startTime)` (pas de chevauchement par classe et créneau).
 
-**Changement majeur** : `dayOfWeek` (Int 1-5) remplacé par `timeSlot` (enum des 5 créneaux autorisés). Cela empêche structurellement toute création de cours en dehors des jours autorisés.
+**Contrainte métier : 1 Schedule par ClassGroup.** Chaque classe a un seul créneau hebdomadaire fixe. Un élève appartient à une seule classe et vient une seule fois par semaine.
+
+**Simplification v0.1** : les champs `subjectId` et `teacherId` ont été retirés de Schedule. Le professeur est désormais sur `ClassGroup.mainTeacherId` (un prof attitré pour toute l'année). Schedule ne porte plus que le créneau horaire et la salle.
 
 ---
 
@@ -480,7 +484,6 @@ model Teacher {
   school         School           @relation(fields: [schoolId], references: [id])
   subjects       TeacherSubject[]
   classGroups    ClassGroup[]     @relation("MainTeacher")
-  schedules      Schedule[]
   courseContents CourseContent[]
   homeworks      Homework[]
 }
@@ -616,7 +619,6 @@ model Subject {
 
   school         School           @relation(fields: [schoolId], references: [id])
   teachers       TeacherSubject[]
-  schedules      Schedule[]
   courseContents CourseContent[]
   homeworks      Homework[]
 
@@ -628,8 +630,6 @@ model Schedule {
   schoolId       String
   academicYearId String
   classGroupId   String
-  subjectId      String
-  teacherId      String
   timeSlot       TimeSlot
   startTime      String   // Format "HH:MM"
   endTime        String   // Format "HH:MM"
@@ -638,8 +638,6 @@ model Schedule {
 
   school         School          @relation(fields: [schoolId], references: [id])
   classGroup     ClassGroup      @relation(fields: [classGroupId], references: [id])
-  subject        Subject         @relation(fields: [subjectId], references: [id])
-  teacher        Teacher         @relation(fields: [teacherId], references: [id])
   attendances    Attendance[]
   courseContents CourseContent[]
 

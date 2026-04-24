@@ -377,11 +377,13 @@ Gérer les classes de l'école. Les classes sont **majoritairement non mixtes** 
 | Libellé | Nom de la classe |
 | Niveau | Niveau rattaché |
 | Genre | Filles / Garçons / Mixte (badge coloré) |
+| Professeur attitré | Nom du prof, ou "Non assigné" en gris |
+| Créneau | TimeSlot + horaires (ex: "Samedi matin 09:00-12:00") |
 | Période | Trimestre / Semestre / Bimestre / Période |
 | Nombre de places | Capacité maximale |
 | Élèves inscrits | Nombre actuel |
 | Taux de remplissage | % |
-| Actions | Modifier, Supprimer, Voir élèves |
+| Actions | Modifier, Supprimer |
 
 #### Modale de création/édition
 
@@ -390,17 +392,21 @@ Gérer les classes de l'école. Les classes sont **majoritairement non mixtes** 
 | Libellé | Text | Oui | |
 | Niveau | Select | Oui | Niveaux libres de l'école |
 | Genre de la classe | Select (Filles / Garçons / Mixte) | Oui | **Défaut : Garçons** (non mixte par défaut) |
+| Professeur attitré | Select | Non | Prof qui enseigne toutes les matières à cette classe pour l'année |
+| Créneau | Select (5 TimeSlots) | Oui | Mercredi PM, Samedi AM/PM, Dimanche AM/PM |
+| Horaires | Time (début + fin) | Oui | ex: 09:00 - 12:00 |
+| Salle | Text | Non | |
 | Période | Select (Trimestre/Semestre/Bimestre/Période) | Oui | **Défaut : Trimestre** |
 | Nombre de places | Number | Oui | |
-| Professeur principal | Select | Non | |
-| Salle | Text | Non | |
 
 ### Règles
+- **1 classe = 1 créneau hebdomadaire** : chaque classe a un seul TimeSlot fixe par semaine. Un élève ne vient qu'une fois par semaine, au créneau de sa classe.
 - Une classe ne peut être supprimée que si elle ne contient aucun élève
 - L'inscription d'un élève dans une classe pleine est bloquée (nombre inscrits < nombre de places)
-- Le genre de la classe est défini explicitement à la création (FILLE, GARCON ou MIXTE)
+- Le genre de la classe est défini explicitement à la création : **FILLE**, **GARCON** ou **MIXTE**
 - Si la classe est FILLE ou GARCON, seuls les élèves du genre correspondant peuvent y être inscrits
 - Si la classe est MIXTE, tous les élèves peuvent y être inscrits
+- Les classes MIXTE sont possibles et apparaissent avec un badge vert distinct
 
 ---
 
@@ -481,9 +487,8 @@ Permettre de faire l'appel pour un cours donné. Accessible depuis le tableau de
 ### Règles
 - Un appel ne peut être fait qu'une seule fois par cours/créneau (modifiable ensuite)
 - Un appel ne peut être créé que pour un créneau autorisé (mercredi PM, samedi AM/PM, dimanche AM/PM)
-- Le calcul strict des demi-journées : absent à **tous les créneaux** d'une demi-journée = 1 demi-journée d'absence comptée
+- Puisque chaque classe a 1 seul créneau/semaine, 1 absence = 1 semaine manquée. Le seuil d'alerte (4 absences) = l'élève a raté 4 semaines de cours.
 - Un retard > 15 minutes est comptabilisé comme une absence
-- Maximum 5 demi-journées d'absence possibles par semaine
 
 ---
 

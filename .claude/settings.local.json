@@ -7,7 +7,16 @@
       "Bash(mv /home/younes/ecole-gestion/docs /tmp/docs.bak)",
       "Bash(cp /tmp/README.md.bak /home/younes/ecole-gestion/README.md)",
       "Bash(cp -r /tmp/docs.bak /home/younes/ecole-gestion/docs)",
-      "Bash(npx shadcn@latest *)"
+      "Bash(npx shadcn@latest *)",
+      "Bash(npm install *)",
+      "Bash(openssl rand *)",
+      "Bash(npx next *)",
+      "Bash(npx prisma *)",
+      "Bash(git checkout *)",
+      "Bash(grep -v \"^◇\\\\|^Loaded\\\\|^Prisma schema\\\\|^$\")",
+      "Bash(node *)",
+      "Bash(npm run *)",
+      "Bash(git add *)"
     ]
   }
 }

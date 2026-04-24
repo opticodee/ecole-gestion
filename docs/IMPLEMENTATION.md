@@ -6,6 +6,142 @@ Ce document définit la stratégie d'implémentation du module Vie scolaire pour
 
 ---
 
+## 0. État d'avancement (mis à jour 2026-04-23)
+
+**Statut global : Module Vie Scolaire fonctionnellement complet (20 pages, 25 routes). Phase 6 polish/déploiement non démarrée. npm run build : 0 erreur.**
+
+### Architecture de routing
+
+Depuis le 2026-04-17, l'application est organisée par **modules** :
+
+- **`/admin/modules`** — Page d'entrée post-login avec 4 cartes (Vie Scolaire active, les 3 autres marquées "Bientôt")
+- **`/admin`** — Redirige vers `/admin/modules`
+- **`/admin/vie-scolaire/*`** — Toutes les pages du module Vie Scolaire (avec sidebar dédiée + lien "Retour aux modules")
+- Les modules futurs (Planning, Communication, Facturation) auront leur propre sous-route et leur propre sidebar
+
+### Pages livrées (module Vie Scolaire)
+
+| Route | Contenu | Statut |
+|---|---|---|
+| `/login` | Auth credentials (Auth.js v5) | ✓ |
+| `/admin/modules` | Sélecteur de modules post-login (4 cartes, 1 active) | ✓ |
+| `/admin/vie-scolaire` | Dashboard : 4 KPIs + planning semaine + prochains cours + alertes absences + activité récente | ✓ |
+| `/admin/vie-scolaire/eleves` | Liste élèves (recherche, filtres, pagination, exports CSV/Excel/PDF) | ✓ |
+| `/admin/vie-scolaire/eleves/[id]` | Fiche élève (onglets : infos, parents, scolarité, absences) | ✓ |
+| `/admin/vie-scolaire/parents` | Liste parents (filtres, statut invitation) | ✓ |
+| `/admin/vie-scolaire/parents/[id]` | Fiche parent + enfants liés | ✓ |
+| `/admin/vie-scolaire/classes` | CRUD classes (genre FILLE/GARCON/MIXTE, prof attitré, créneau unique) | ✓ |
+| `/admin/vie-scolaire/niveaux` | CRUD niveaux libres (agrégations inscrits/capacité) | ✓ |
+| `/admin/vie-scolaire/matieres` | CRUD matières hiérarchiques (parent/enfant, arbre accordéon) | ✓ |
+| `/admin/vie-scolaire/contenu-cours` | CRUD journal de cours (titre, contenu, objectifs, remarques) | ✓ |
+| `/admin/vie-scolaire/devoirs` | CRUD devoirs (titre, description, consignes, échéance, statut auto) | ✓ |
+| `/admin/vie-scolaire/appel` | Page dédiée : sélecteur + pastilles semaine + historique paginé + filtres + détail + export CSV + stats | ✓ |
+| `/admin/vie-scolaire/evaluations` | Liste évaluations (filtres, CRUD, lock, exports CSV/Excel/PDF/Imprimer) | ✓ |
+| `/admin/vie-scolaire/evaluations/[id]/notes` | Saisie notes (table + absent, stats temps réel, brouillon/verrouiller, export CSV) | ✓ |
+| `/admin/vie-scolaire/notes` | Récapitulatif notes & moyennes (grille classe, vue élève, rangs, codes couleur, exports) | ✓ |
+| `/admin/vie-scolaire/appreciations` | Saisie appréciations (générale + par matière, suggestions rapides) | ✓ |
+| `/admin/vie-scolaire/mentions` | Mentions automatiques + override manuel + commentaire conseil | ✓ |
+| `/admin/vie-scolaire/bulletins` | Readiness panel + aperçu modale + PDF A4 individuel/bulk | ✓ |
+| `/admin/vie-scolaire/conseil-classe` | Décisions 9 options + observation + PV PDF avec signatures | ✓ |
+| `/admin/vie-scolaire/livret` | Vue agrégée année × trimestres + PDF A4 multi-pages | ✓ |
+| `/admin/vie-scolaire/passage` | Décisions passage (enum) + vérifications capacité/genre + application irréversible | ✓ |
+| `/admin/vie-scolaire/enseignants` | CRUD enseignants (création User + Teacher, exports, filtres) | ✓ |
+| `/admin/vie-scolaire/enseignants/[id]` | Fiche prof : infos, classes, emploi du temps 5 créneaux, stats | ✓ |
+| `/admin/vie-scolaire/emploi-du-temps` | Grille calendrier 3×2 (Mercredi/Samedi/Dimanche × Matin/Après-midi) avec multi-classes par créneau, 3 vues, navigation semaine, pastilles appel, export PDF paysage | ✓ |
+| `/admin/vie-scolaire/annee-scolaire` | Cycle BROUILLON → ACTIVE → CLOTUREE, pré-remplissage intelligent, dropdown année dans le header | ✓ |
+
+### Fonctionnalités terminées
+
+- **Auth** : login credentials, session JWT avec `schoolId`/`role`/`userId`, middleware de protection, redirection post-login vers `/admin/modules`
+- **Multi-tenant** : isolation par `schoolId` sur toutes les requêtes Prisma
+- **Seed** : école coranique de démo, 1 admin + 1 directeur, 5 enseignants (avec genre), 8 classes (dont 3 sur SAMEDI_AM pour démo multi-classes), 37 élèves, 52 parents, **17 matières hiérarchiques**, **5 évaluations (3 verrouillées avec 17 notes)**, **37 appréciations + mentions + décisions conseil (T1)**, 148 enregistrements d'appel, année scolaire 2025-2026 **ACTIVE** avec dates de trimestres
+- **CRUD complet** : niveaux, classes, matières (avec hiérarchie), élèves, parents, enseignants, contenus de cours, devoirs, évaluations, notes, années scolaires
+- **Hiérarchie matières** : `Subject.parentId` (self-ref, `onDelete: Cascade`), rendu en arbre accordéon, suppression cascade, nesting 2 niveaux max
+- **Module Évaluations** : modèles `Evaluation` + `Grade`, CRUD complet, formulaire dynamique (coef auto 2/1 selon type, prof auto-rempli via `class.mainTeacher`, sous-matière filtrée), mécanisme de verrouillage (isLocked bloque edit/delete)
+- **Saisie notes** : table élèves + input note + checkbox absent, stats temps réel (moyenne/max/min/noté/absent), "Enregistrer brouillon" + "Valider et verrouiller" (modale confirm, requiert note ou absent pour chaque élève), lecture seule si verrouillé
+- **Chaîne bulletin complète** : notes+moyennes (rangs, codes couleur, exports) → appréciations (générale + par matière, suggestions) → mentions (auto Excellent/TB/B/Passable/Insuffisant + override manuel 9 options) → bulletins (aperçu + PDF A4 individuel/bulk) → conseil de classe (décisions + PV PDF signatures) → livret scolaire (vue agrégée + PDF multi-pages) → passage de classe (application irréversible avec vérifications)
+- **CRUD Enseignants** : création transactionnelle User PROFESSEUR + Teacher avec mot de passe temporaire hashé, fiche avec emploi du temps 5 créneaux, navigation croisée depuis page Classes
+- **Emploi du temps visuel** : grille 3 colonnes (Mercredi/Samedi/Dimanche) × 2 lignes (Matin/Après-midi) avec Mercredi matin grisé "Pas de cours". Support **plusieurs classes par créneau** : cards stackées en taille full/compact/ultra selon le nombre, bouton "+N autres" + dialog si 4+. 3 vues (ALL / BY_TEACHER / BY_CLASS). Cards colorées par genre (FILLE rose / GARCON bleu / MIXTE violet). Pastille appel 4 états. Navigation semaine + bouton "Aujourd'hui". Modale détail avec actions (appel, classe, contenu, devoir, fiche prof). 5 KPIs + tableau récap dépliable. Exports CSV + PDF A4 paysage + impression. Responsive (grille desktop → liste mobile).
+- **Année scolaire** : enum `AcademicYearStatus` (BROUILLON/ACTIVE/CLOTUREE), cycle de vie strict, `isCurrent` dénormalisé pour rétro-compat, cards empilées avec bordure colorée par statut, formulaire avec pré-remplissage intelligent (libellé auto YYYY-YYYY+1, endDate=30/06, trimestres T1 01/09→20/12 / T2 05/01→28/03 / T3 06/04→30/06). Activation avec conflit (modale "Clôturer X et activer Y"). Clôture irréversible avec warning si passages non appliqués. Suppression brouillon uniquement sans données. Helper `getActiveAcademicYear(schoolId)` + garde `assertYearNotClosed(id)`. Dropdown YearSwitcher dans le header + bandeau jaune ArchiveBanner (visuel v0.1).
+- **Liaison parent ↔ élève** : création depuis fiche parent ou fiche élève, ajout frère/sœur
+- **Contrôles métier** : capacité classe, compatibilité genre élève/classe, protection suppression si dépendances
+- **Appel** : modale P/A/R avec champ lateMinutes, retard > 15 min → ABSENT automatique, upsert par `(scheduleId, studentId, date)`, modification possible
+- **Dashboard** : KPIs agrégés, planning des 5 créneaux de la semaine courante, alertes élèves ≥ 4 absences, activité récente (5 derniers contenus + devoirs)
+- **Historique appel** : groupé par (classe, date, créneau), filtres serveur, pagination 15/page, détail en modale, export CSV avec BOM UTF-8
+- **Exports** : CSV/Excel/PDF sur liste élèves, CSV sur historique appel, CSV/Excel/PDF/Imprimer sur liste évaluations, CSV sur saisie notes, PDF A4 bulletins individuels et bulk, PV conseil PDF, livret PDF, emploi du temps PDF paysage, CSV/PDF décisions de passage
+- **Dropdowns harmonisés** : helper `toSelectItems()` dans `src/components/ui/select.tsx` + prop `items` sur chaque `<Select.Root>` (Base UI API officielle) — affiche le label au lieu de l'UUID (~50 dropdowns corrigés). `SelectContent` par défaut en mode popper (`alignItemWithTrigger=false`) + `max-h-60 overflow-y-auto` pour éviter le saut visuel à la sélection.
+
+### Décisions prises le 2026-04-23
+
+1. **Chaîne bulletin complète** : 4 pages enchaînées (notes → appréciations → mentions → bulletins) + conseil + livret + passage. Partage d'un helper `src/lib/bulletin.ts` (périodes T1=sept-déc / T2=jan-mars / T3=avr-juin, weightedAverage, simpleAverage pour overall, computeRanks, computeAutoMention seuils 9/8/7/5).
+2. **Modèle `Appreciation`** (migration `20260423131354_add_appreciations_mentions`) : `generalComment`, `subjectComments` Json keyé par subjectId top-level, `autoMention`/`manualMention`, `councilComment`. Unique `(studentId, classGroupId, period, academicYearId)`.
+3. **Champs conseil de classe** (migration `20260423134648_add_council_fields`) : `councilDecision` (enum 9 options) + `councilObservation` ajoutés à Appreciation. Idem migration ajoute le modèle `ClassTransition` et enum `TransitionDecision` (PASSAGE/REDOUBLEMENT/DEPART/EN_ATTENTE).
+4. **Modèle `ClassTransition`** : `fromClassGroupId`, `decision` (enum), `toClassGroupId?`, `toLevelId?`, `observation`, `isApplied`, unique `(studentId, academicYearId)`. Action `applyTransitions()` vérifie capacité + compatibilité genre avant d'effectuer les déplacements irréversibles.
+5. **Teacher étendu** (migration `20260423133354_add_teacher_fields`) : ajout de `gender`, `address`, `dateOfBirth` sur Teacher. Création transactionnelle User PROFESSEUR + Teacher avec mot de passe temporaire hashé `ChangeMe2026!`.
+6. **Multi-classes par créneau** : `Schedule` autorise plusieurs classes sur le même `timeSlot` tant qu'elles ont des `classGroupId` différents. L'emploi du temps gère le stacking visuel (card size 'full'/'compact'/'ultra' selon le nombre, overflow modal pour 4+).
+7. **`AcademicYear` étendu** (migration `20260423144311_add_academic_year_status`) : enum `AcademicYearStatus` (BROUILLON/ACTIVE/CLOTUREE) + 6 champs trimestres + `closedAt`. `isCurrent` conservé dénormalisé (synchronisé avec `status=ACTIVE`) pour que les queries existantes sur `{ isCurrent: true }` continuent à fonctionner sans refactor.
+8. **Helper server-only vs client-safe** : les constantes (labels, couleurs) d'AcademicYear vivent dans `src/lib/academic-year.ts` (client-safe). Les helpers Prisma (`getActiveAcademicYear`, `assertYearNotClosed`) vivent dans `src/server/actions/academic-years.ts` pour éviter qu'un composant client importe transitivement Prisma (erreur "Can't resolve 'tls'").
+9. **Fix dropdowns Base UI** : la prop `items` sur `Select.Root` dit à `<Select.Value>` comment afficher le label de la sélection — sans elle, Base UI affiche la valeur brute (UUID). Helper `toSelectItems(list, valueKey, labelKey)` centralisé + passé sur chaque Select (~50 dropdowns).
+10. **Fix saut dropdown** : défaut `alignItemWithTrigger=false` sur `SelectContent` (équivalent de `position="popper"` côté Radix) + `max-h-60 overflow-y-auto`. Appliqué une seule fois dans `src/components/ui/select.tsx`, pas de changement par site d'usage.
+
+### Décisions prises le 2026-04-17
+
+1. **Architecture modulaire** : séparation des modules en sous-routes `/admin/<module>/*` — sidebar par module, page d'entrée `/admin/modules` pour la sélection
+2. **Hiérarchie matières parent/enfant** : `Subject.parentId` self-référentiel, cascade delete, 2 niveaux max (pas de petits-enfants). Seed : Général, Langue arabe + 7 enfants, Comportement, Éducation musulmane + 4 enfants, Coran + 1 enfant
+3. **Modèles `Evaluation` + `Grade`** (migration `20260417134339_add_subject_hierarchy_evaluations_grades`) :
+   - `Evaluation` : `mode` (INDIVIDUAL/GROUP), `type` (CONTROLE/EXAMEN), `coefficient` (défaut 2), `scale` (défaut 10), `isLocked`
+   - `Grade` : `score: Float?`, `isAbsent: Boolean`, unique sur `(evaluationId, studentId)`
+4. **Coefficient auto** : CONTROLE → 2, EXAMEN → 1 (modifiable, uniquement en création)
+5. **Prof auto-rempli** dans le form Évaluations depuis `class.mainTeacherId`
+6. **Sous-matière filtrée** : le dropdown "Sous-matière" propose uniquement les enfants de la matière sélectionnée
+7. **Mode évaluation** : seul le mode `GROUP` est exposé dans l'UI v0.1 — le mode `INDIVIDUAL` est prêt côté DB mais pas dans le formulaire
+8. **Lock irréversible** : une évaluation verrouillée ne peut plus être modifiée ni supprimée (bouton désactivé, modal confirm avant lock)
+9. **Notes : validation lock** : pour verrouiller, chaque élève doit avoir une note OU être marqué absent (brouillon plus permissif)
+
+### Décisions conservées (2026-04-16)
+
+1. **Modèle 1 classe = 1 prof** : chaque classe a un `mainTeacherId` unique qui enseigne toutes les matières. La table `TeacherSubject` existe mais n'est plus utilisée.
+2. **Schedule simplifié** : plus de `subjectId` ni `teacherId`. Une classe a un seul `Schedule` (un `TimeSlot` + horaires + salle).
+3. **`CourseContent.subjectId` et `Homework.subjectId` nullables** (migration `20260416200000_add_course_content_homework_fields`).
+4. **Prof auto-rempli** : formulaires Contenu/Devoirs/Évaluations n'ont plus de dropdown prof.
+5. **Supabase Storage non déployé** : clients configurés (`src/lib/supabase.ts`) mais buckets non créés.
+6. **Invitation parent reportée** : création parent crée un `User` sans envoyer d'email.
+7. **Retard > 15 min → absence** : constante `LATE_TO_ABSENT_MINUTES`.
+8. **Seuil alerte absences ≥ 4** : constante `ABSENCE_ALERT_THRESHOLD`.
+9. **Pagination** 10/page sur Contenu/Devoirs/Évaluations, 15/page sur historique Appel.
+
+### Reste à faire (mis à jour 2026-04-23)
+
+**Périmètres identifiés pour les prochaines itérations**
+- **Espace Professeur** : dashboard prof filtré sur ses classes, appel autonome, saisie notes, contenu de cours, devoirs (phase 5.3.x du backlog)
+- **Import CSV élèves/parents** : upload + mapping colonnes + validation + création en masse avec rapport d'erreurs
+- **Espace Parents** (portail) : vue notes de ses enfants, bulletins téléchargeables, consultation appel, messagerie (placeholder)
+- **Page Paramètres** : configuration école (nom, logo, coordonnées, timezone), paramètres d'année (jours de cours, créneaux personnalisés), préférences
+- **Gestion utilisateurs admin** : CRUD ADMIN/DIRECTEUR/PERSONNEL depuis l'interface (actuellement seeds uniquement)
+- **Déploiement Vercel + Neon** : configuration env, script de migration, monitoring
+
+**Fonctionnel restant**
+- **Mode `INDIVIDUAL`** dans le formulaire évaluation (modèle prêt côté DB, UI GROUP-only)
+- **Espace Prof** (phase 5.3) : dashboard filtré, restriction d'accès aux classes assignées
+
+**Infra bloquante**
+- Supabase Storage (3 buckets + policies + helpers) → upload photo élève, pièces jointes devoirs
+- Service email (Resend recommandé) → workflow invitation parent (token + lien MDP), renvoi d'invitation
+
+**Règles métier**
+- Restriction modification 7 jours côté prof (contenu, devoirs, notes non verrouillées)
+- Calcul strict demi-journées d'absence (absent à TOUS les créneaux d'une demi-journée)
+- Enforcement `assertYearNotClosed` dans les Server Actions existantes (grades, attendance, evaluations) pour bloquer les écritures sur une année CLOTUREE si l'archive devient navigable
+
+**Phase 6 — Polish / déploiement**
+- Empty states homogènes, loading skeletons, error boundaries
+- Responsive tables → cards mobile (polish ciblé)
+- Tests unitaires règles métier (calcul demi-journées, validations, pré-remplissage année)
+- Déploiement Vercel + Neon
+- Revue de sécurité (RLS, injection, XSS, tokens)
+
+---
+
 ## 1. Périmètre de la v0.1
 
 ### Inclus

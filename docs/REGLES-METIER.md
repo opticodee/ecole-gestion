@@ -78,6 +78,13 @@ L'école fonctionne **exclusivement** sur les 5 demi-journées suivantes :
 - Le libellé de la classe doit être unique par école et par année scolaire.
 - Le type de période (TRIMESTRE par défaut, SEMESTRE, BIMESTRE, PERIODE) est défini à la création et s'applique à toute la classe.
 
+### Professeur attitré
+- **1 classe = 1 professeur attitré pour toute l'année scolaire.**
+- Le professeur enseigne TOUTES les matières à sa classe (pas de rotation de profs par matière).
+- Un professeur peut être attitré à PLUSIEURS classes, mais sur des créneaux différents.
+- **Validation** : un professeur ne peut pas être assigné à 2 classes sur le même créneau (conflit d'emploi du temps).
+- Le champ `mainTeacherId` sur ClassGroup est optionnel à la création (peut être assigné ultérieurement).
+
 ### Genre de la classe
 - Trois options : **FILLE**, **GARCON**, **MIXTE**.
 - **Défaut : GARCON** (les classes non mixtes sont la norme dans les écoles arabes/coraniques).
@@ -159,18 +166,21 @@ L'école fonctionne **exclusivement** sur les 5 demi-journées suivantes :
 - Un retard de plus de **15 minutes** est automatiquement comptabilisé comme une absence.
 - Seuil fixe à 15 minutes en v0.1. À rendre configurable par école en v0.2.
 
-### Demi-journées et calcul strict
+### Règle fondamentale : 1 élève = 1 classe = 1 créneau/semaine
+- Chaque classe dispose d'**un seul créneau hebdomadaire fixe** (un TimeSlot parmi les 5 possibles).
+- Un élève appartient à une seule classe, donc il vient **une seule fois par semaine**, au créneau de sa classe.
+- Conséquence directe : **1 absence = l'élève a raté son unique créneau de la semaine**.
+
+### Calcul des absences simplifié
 - Le champ `halfDay` utilise l'enum `TimeSlot` — il est déterminé automatiquement à l'enregistrement selon le créneau du cours.
-- **Calcul strict** : un élève est considéré "absent une demi-journée" uniquement s'il est absent à **TOUS les créneaux** de cette demi-journée.
-  - Exemple : si un élève a 2 cours le samedi matin et est absent au premier mais présent au second, il n'est PAS compté comme absent une demi-journée.
-  - Si un élève est absent aux 2 cours du samedi matin, il est compté comme absent 1 demi-journée.
-- **Maximum théorique** : 5 demi-journées d'absence par semaine, ~20 par mois.
+- Puisqu'un élève n'a qu'un seul créneau par semaine, le calcul est direct : chaque absence = 1 semaine manquée.
+- **Maximum théorique** : 1 absence par semaine, ~4 par mois.
 
 ### Alertes
-- **Seuil d'alerte** : 4 demi-journées d'absence non justifiées sur le mois en cours.
+- **Seuil d'alerte** : 4 absences non justifiées sur le mois en cours (= l'élève a été absent 4 semaines sur ~4-5 semaines du mois).
 - Seuil fixe en v0.1 (4). À rendre configurable par école via settings en v0.2.
 - Les élèves atteignant ce seuil apparaissent sur le tableau de bord dans la zone "Alertes".
-- Badge rouge avec le nombre exact de demi-journées.
+- Badge rouge avec le nombre exact d'absences.
 
 ### Justification
 - Une absence peut être marquée comme "justifiée" après coup par un admin/directeur.
